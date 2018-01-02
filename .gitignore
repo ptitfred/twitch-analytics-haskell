@@ -1,3 +1,4 @@
 .stack-work/
 twitch-analytics-haskell.cabal
 *~
+*.sw*
