@@ -47,3 +47,5 @@ tests:
     - test-framework
     - test-framework-hunit
     - HUnit
+    - text
+    - template-haskell
