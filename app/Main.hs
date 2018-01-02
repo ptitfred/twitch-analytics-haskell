@@ -1,8 +1,8 @@
 module Main where
 
-import           TwitchParser    (extractViewerCount)
+import           TwitchParser         (extractViewerCount)
 
-import qualified Data.ByteString as B (getContents)
+import qualified Data.ByteString.Lazy as B (getContents)
 
 main :: IO ()
 main = do
