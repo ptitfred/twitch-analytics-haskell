@@ -14,10 +14,28 @@ import           UTF8QQ                         (utf8)
 
 test :: Test
 test = testGroup "Parser"
-  [ testCase "example" testExample
+  [ testCase "With a valid json response" testValidExample,
+    testCase "With an empty json response" testEmptyExample,
+    testCase "With an invalid response" testErrorExample
   ]
 
-testExample = extractViewerCount example @?= 15
+testValidExample = extractViewerCount example @?= Just 15
+testEmptyExample = extractViewerCount emptyDataExample @?= Nothing
+testErrorExample = extractViewerCount errorExample @?= Nothing
+
+emptyDataExample :: ByteString
+emptyDataExample =
+  [utf8|
+    {
+      "data": []
+    }
+  |]
+
+errorExample :: ByteString
+errorExample =
+  [utf8|
+    Internal Server Error
+  |]
 
 example :: ByteString
 example =

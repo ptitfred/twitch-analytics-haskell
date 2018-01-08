@@ -7,30 +7,27 @@ module TwitchParser
 import           Data.Aeson
 import           Data.ByteString.Lazy (ByteString)
 
-extractViewerCount :: ByteString -> Int
-extractViewerCount json =
-  case parser json of
-    Just ms -> checkViewerCount (metadatas ms)
-    Nothing -> 0
+extractViewerCount :: ByteString -> Maybe Int
+extractViewerCount = maybeViewerCount . maybeFirst . maybeData . decode
 
-checkViewerCount :: [Metadata] -> Int
-checkViewerCount [] = 0
-checkViewerCount ms = viewerCount (head ms)
+maybeData :: Maybe Metadatas -> Maybe [Metadata]
+maybeData = fmap metadatas
 
-parser :: ByteString -> Maybe Metadatas
-parser json = decode json
+maybeFirst :: Maybe [a] -> Maybe a
+maybeFirst (Just (m:_)) = Just m
+maybeFirst _            = Nothing
+
+maybeViewerCount :: Maybe Metadata -> Maybe Int
+maybeViewerCount = fmap viewerCount
 
 data Metadatas = Metadatas { metadatas :: [Metadata] }
 
 instance FromJSON Metadatas where
   parseJSON (Object o) = Metadatas <$> o .: "data"
-  parseJSON invalid = fail "unexpected"
+  parseJSON invalid    = fail "unexpected"
 
-data Metadata =
-  Metadata
-    { viewerCount :: Int
-    }
+data Metadata = Metadata { viewerCount :: Int }
 
 instance FromJSON Metadata where
   parseJSON (Object o) = Metadata <$> o .: "viewer_count"
-  parseJSON invalid = fail "unexpected"
+  parseJSON invalid    = fail "unexpected"
