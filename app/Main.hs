@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy as B (getContents)
 main :: IO ()
 main = do
   json <- B.getContents
-  print $ humanViewerCount $ extractViewerCount json
+  putStrLn $ humanViewerCount $ extractViewerCount json
 
 humanViewerCount :: Maybe Int -> String
 humanViewerCount (Just i)
