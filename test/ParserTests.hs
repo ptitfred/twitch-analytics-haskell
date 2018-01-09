@@ -4,23 +4,32 @@ module ParserTests
   ( test
   ) where
 
-import           TwitchParser                   (extractViewerCount)
+import           TwitchParser                   (interpretMetadatas)
 
+import           Data.Aeson                     (eitherDecode)
 import           Data.ByteString.Lazy           (ByteString)
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
-import           Test.HUnit                     ((@?=))
+import           Test.HUnit                     (Assertion, (@?=))
 import           UTF8QQ                         (utf8)
 
 test :: Test
 test = testGroup "Parser"
-  [ testCase "With a valid json response" testValidExample,
-    testCase "With an empty json response" testEmptyExample,
-    testCase "With an invalid response" testErrorExample
+  [ testCase "With a valid json response"  testValidExample
+  , testCase "With an empty json response" testEmptyExample
+  , testCase "With an invalid response"    testErrorExample
   ]
 
+extractViewerCount :: ByteString -> Maybe Int
+extractViewerCount = interpretMetadatas . eitherDecode
+
+testValidExample :: Assertion
 testValidExample = extractViewerCount example @?= Just 15
+
+testEmptyExample :: Assertion
 testEmptyExample = extractViewerCount emptyDataExample @?= Nothing
+
+testErrorExample :: Assertion
 testErrorExample = extractViewerCount errorExample @?= Nothing
 
 emptyDataExample :: ByteString

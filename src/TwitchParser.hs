@@ -1,33 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module TwitchParser
-    ( extractViewerCount
+    ( fetchViewerCount
+    , interpretMetadatas
     ) where
 
-import           Data.Aeson
-import           Data.ByteString.Lazy (ByteString)
+import           Types
 
-extractViewerCount :: ByteString -> Maybe Int
-extractViewerCount = maybeViewerCount . maybeFirst . maybeData . decode
+import           TwitchAPI (fetchMetadatas)
 
-maybeData :: Maybe Metadatas -> Maybe [Metadata]
-maybeData = fmap metadatas
+fetchViewerCount :: UserLogin -> IO (Maybe Int)
+fetchViewerCount userLogin = interpretMetadatas <$> fetchMetadatas userLogin
 
-maybeFirst :: Maybe [a] -> Maybe a
-maybeFirst (Just (m:_)) = Just m
-maybeFirst _            = Nothing
+interpretMetadatas :: Either String Metadatas -> Maybe Int
+interpretMetadatas (Left   _)     = Nothing
+interpretMetadatas (Right result) = extract result
 
-maybeViewerCount :: Maybe Metadata -> Maybe Int
-maybeViewerCount = fmap viewerCount
-
-data Metadatas = Metadatas { metadatas :: [Metadata] }
-
-instance FromJSON Metadatas where
-  parseJSON (Object o) = Metadatas <$> o .: "data"
-  parseJSON invalid    = fail "unexpected"
-
-data Metadata = Metadata { viewerCount :: Int }
-
-instance FromJSON Metadata where
-  parseJSON (Object o) = Metadata <$> o .: "viewer_count"
-  parseJSON invalid    = fail "unexpected"
+extract :: Metadatas -> Maybe Int
+extract (Metadatas [])    = Nothing
+extract (Metadatas (m:_)) = Just (viewerCount m)
