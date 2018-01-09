@@ -15,12 +15,16 @@ extra-source-files:
 dependencies:
 - base >= 4.7 && < 5
 - aeson
-- bytestring
+- servant
+- servant-client
+- http-client
+- http-client-tls
 
 library:
   source-dirs: src
   exposed-modules:
     - TwitchParser
+    - TwitchAPI
 
 executables:
   twitch-analytics-haskell-exe:
@@ -44,6 +48,7 @@ tests:
     - -main-is Spec
     dependencies:
     - twitch-analytics-haskell
+    - bytestring
     - test-framework
     - test-framework-hunit
     - HUnit

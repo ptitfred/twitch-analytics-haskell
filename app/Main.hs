@@ -1,13 +1,11 @@
 module Main where
 
-import           TwitchParser         (extractViewerCount)
-
-import qualified Data.ByteString.Lazy as B (getContents)
+import           TwitchParser         (fetchViewerCount)
 
 main :: IO ()
 main = do
-  json <- B.getContents
-  putStrLn $ humanViewerCount $ extractViewerCount json
+  viewerCount <- fetchViewerCount "ptit_fred"
+  putStrLn $ humanViewerCount viewerCount
 
 humanViewerCount :: Maybe Int -> String
 humanViewerCount (Just i)
