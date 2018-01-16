@@ -3,9 +3,10 @@
 {-# LANGUAGE TypeOperators     #-}
 
 module TwitchAPI
-  ( fetchMetadatas
+  ( fetchViewerCount
   ) where
 
+import           TwitchParser (interpretMetadatas)
 import           Types
 
 import           Data.Proxy              (Proxy (..))
@@ -42,6 +43,9 @@ fetchMetadatas userLogin = do
       clientEnv = ClientEnv manager baseUrl
   result <- runClientM fetchClient clientEnv
   pure (convertError result)
+
+fetchViewerCount :: UserLogin -> IO (Maybe Int)
+fetchViewerCount userLogin = interpretMetadatas <$> fetchMetadatas userLogin
 
 convertError :: Either ServantError Metadatas -> Either String Metadatas
 convertError (Left err)     = Left (serializeError err)

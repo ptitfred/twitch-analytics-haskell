@@ -1,6 +1,6 @@
 module Main where
 
-import           TwitchParser         (fetchViewerCount)
+import           TwitchAPI    (fetchViewerCount)
 
 main :: IO ()
 main = do
