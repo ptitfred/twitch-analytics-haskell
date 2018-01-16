@@ -2,10 +2,24 @@ module Main where
 
 import           TwitchAPI          (fetchViewerCount)
 
+import           Control.Concurrent (threadDelay)
 import           System.Environment (getArgs)
 
 main :: IO ()
-main = do
+main = watch 10 process
+
+watch :: Int -> IO () -> IO ()
+watch seconds action = do
+  action
+  putStrLn "."
+  threadDelay (toMicroseconds seconds)
+  watch seconds action
+
+toMicroseconds :: Int -> Int
+toMicroseconds seconds = seconds * 1000 * 1000
+
+process :: IO ()
+process = do
   args <- getArgs
   case getOutputPath args of
     Just path -> do
