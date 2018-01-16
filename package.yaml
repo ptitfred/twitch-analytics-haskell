@@ -25,6 +25,9 @@ library:
   exposed-modules:
     - TwitchParser
     - TwitchAPI
+  ghc-options:
+    - -Wall
+    - -Werror
 
 executables:
   twitch-analytics-haskell-exe:
@@ -34,6 +37,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -Wall
+    - -Werror
     dependencies:
     - twitch-analytics-haskell
 
