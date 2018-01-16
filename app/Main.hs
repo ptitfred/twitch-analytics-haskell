@@ -21,8 +21,9 @@ toMicroseconds :: Int -> Int
 toMicroseconds seconds = seconds * 1000 * 1000
 
 process :: Maybe FilePath -> IO ()
-process Nothing     = putStrLn "Missing argument: output path filename"
-process (Just path) = updateViewerCount path
+process = maybe missingArgument updateViewerCount
+  where
+    missingArgument = putStrLn "Missing argument: output path filename"
 
 updateViewerCount :: FilePath -> IO ()
 updateViewerCount path = do
