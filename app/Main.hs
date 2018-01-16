@@ -1,11 +1,14 @@
 module Main where
 
-import           TwitchAPI    (fetchViewerCount)
+import           TwitchAPI          (fetchViewerCount)
+
+import           System.Environment (getEnv)
 
 main :: IO ()
 main = do
   viewerCount <- fetchViewerCount "ptit_fred"
-  putStrLn $ humanViewerCount viewerCount
+  home <- getEnv "HOME"
+  writeFile (home ++ "/livecoding/viewer-count.txt") (humanViewerCount viewerCount)
 
 humanViewerCount :: Maybe Int -> String
 humanViewerCount (Just i)
