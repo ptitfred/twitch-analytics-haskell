@@ -6,7 +6,9 @@ import           Control.Concurrent (threadDelay)
 import           System.Environment (getArgs)
 
 main :: IO ()
-main = watch 10 process
+main = do
+  args <- getArgs
+  watch 10 (process (getOutputPath args))
 
 watch :: Int -> IO () -> IO ()
 watch seconds action = do
@@ -18,14 +20,14 @@ watch seconds action = do
 toMicroseconds :: Int -> Int
 toMicroseconds seconds = seconds * 1000 * 1000
 
-process :: IO ()
-process = do
-  args <- getArgs
-  case getOutputPath args of
-    Just path -> do
-                   viewerCount <- fetchViewerCount "ptit_fred"
-                   writeFile path (humanViewerCount viewerCount)
-    Nothing   -> putStrLn "Missing argument: output path filename"
+process :: Maybe FilePath -> IO ()
+process Nothing     = putStrLn "Missing argument: output path filename"
+process (Just path) = updateViewerCount path
+
+updateViewerCount :: FilePath -> IO ()
+updateViewerCount path = do
+  viewerCount <- fetchViewerCount "ptit_fred"
+  writeFile path (humanViewerCount viewerCount)
 
 getOutputPath :: [String] -> Maybe FilePath
 getOutputPath (path : _) = Just path
