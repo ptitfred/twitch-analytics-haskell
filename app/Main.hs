@@ -1,11 +1,38 @@
 module Main where
 
-import           TwitchAPI    (fetchViewerCount)
+import           TwitchAPI          (fetchViewerCount)
+
+import           Control.Concurrent (threadDelay)
+import           System.Environment (getArgs)
 
 main :: IO ()
 main = do
+  args <- getArgs
+  watch 10 (process (getOutputPath args))
+
+watch :: Int -> IO () -> IO ()
+watch seconds action = do
+  action
+  putStrLn "."
+  threadDelay (toMicroseconds seconds)
+  watch seconds action
+
+toMicroseconds :: Int -> Int
+toMicroseconds seconds = seconds * 1000 * 1000
+
+process :: Maybe FilePath -> IO ()
+process = maybe missingArgument updateViewerCount
+  where
+    missingArgument = putStrLn "Missing argument: output path filename"
+
+updateViewerCount :: FilePath -> IO ()
+updateViewerCount path = do
   viewerCount <- fetchViewerCount "ptit_fred"
-  putStrLn $ humanViewerCount viewerCount
+  writeFile path (humanViewerCount viewerCount)
+
+getOutputPath :: [String] -> Maybe FilePath
+getOutputPath (path : _) = Just path
+getOutputPath []         = Nothing
 
 humanViewerCount :: Maybe Int -> String
 humanViewerCount (Just i)
