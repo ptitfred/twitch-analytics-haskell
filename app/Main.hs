@@ -3,15 +3,18 @@ module Main where
 import           TwitchAPI          (fetchViewerCount)
 
 import           Control.Concurrent (threadDelay)
+import           Control.Monad      (forever)
 import           System.Environment (getArgs)
-import           Control.Monad (forever)
 
 main :: IO ()
 main = do
   args <- getArgs
-  forever $ process (getOutputPath args) >> putStrLn "." >> wait 10
+  forever $ do
+    process (getOutputPath args)
+    putStrLn "."
+    wait 10
 
-wait :: Int -> IO()
+wait :: Int -> IO ()
 wait seconds = threadDelay (toMicroseconds seconds)
 
 toMicroseconds :: Int -> Int
