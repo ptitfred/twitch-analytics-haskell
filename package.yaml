@@ -15,16 +15,19 @@ extra-source-files:
 dependencies:
 - base >= 4.7 && < 5
 - aeson
-- servant
-- servant-client
 - http-client
 - http-client-tls
+- postgresql-simple
+- servant
+- servant-client
+- text
 
 library:
   source-dirs: src
   exposed-modules:
-    - TwitchParser
+    - Database
     - TwitchAPI
+    - TwitchParser
   ghc-options:
     - -Wall
     - -Werror
