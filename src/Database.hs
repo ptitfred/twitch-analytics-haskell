@@ -27,9 +27,7 @@ insertVideo video = do
     query = "INSERT INTO videos ( url, title, description ) VALUES (?, ?, ?)"
 
 getConnection :: IO Connection
-getConnection = do
-  connectInfos <- getConnectInfos
-  connect connectInfos
+getConnection = connect =<< getConnectInfos
 
 getConnectInfos :: IO ConnectInfo
 getConnectInfos = do
