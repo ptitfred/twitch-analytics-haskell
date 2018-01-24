@@ -28,11 +28,10 @@ instance FromRow Video where
 insertVideo :: Video -> IO Bool
 insertVideo video = do
   connection <- getConnection
-  affectedRows <- execute connection query tuple
+  affectedRows <- execute connection query video
   close connection
   pure (affectedRows == 1)
    where
-    tuple = (url video, title video, description video)
     query = "INSERT INTO videos ( url, title, description ) VALUES (?, ?, ?)"
 
 getConnection :: IO Connection
