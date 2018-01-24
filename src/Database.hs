@@ -27,10 +27,10 @@ insertVideo video = do
     query = "INSERT INTO videos ( url, title, description ) VALUES (?, ?, ?)"
 
 getConnection :: IO Connection
-getConnection = connect =<< getConnectInfos
+getConnection = connect =<< getConnectInfo
 
-getConnectInfos :: IO ConnectInfo
-getConnectInfos =
+getConnectInfo :: IO ConnectInfo
+getConnectInfo =
   ConnectInfo <$> getEnv "PG_HOST"
               <*> (read <$> getEnv "PG_PORT")
               <*> getEnv "PG_USER"
