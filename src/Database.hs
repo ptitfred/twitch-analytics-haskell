@@ -53,10 +53,6 @@ listVideos = do
   connection <- getConnection
   records <- query_ connection selectQuery
   close connection
-  pure $ toVideos records
+  pure records
   where
     selectQuery = "SELECT url, title, description FROM videos"
-    toVideo :: (URL, Text, Text) -> Video
-    toVideo (url', title', description') = Video url' title' description'
-    toVideos :: [(URL, Text, Text)] -> [Video]
-    toVideos records = map toVideo records
