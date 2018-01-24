@@ -30,13 +30,12 @@ getConnection :: IO Connection
 getConnection = connect =<< getConnectInfos
 
 getConnectInfos :: IO ConnectInfo
-getConnectInfos = do
-  host <- getEnv "PG_HOST"
-  port <- getEnv "PG_PORT"
-  user <- getEnv "PG_USER"
-  pass <- getEnv "PG_PASS"
-  dbname <- getEnv "PG_DBNAME"
-  pure $ ConnectInfo host (read port) user pass dbname
+getConnectInfos =
+  ConnectInfo <$> getEnv "PG_HOST"
+              <*> (read <$> getEnv "PG_PORT")
+              <*> getEnv "PG_USER"
+              <*> getEnv "PG_PASS"
+              <*> getEnv "PG_DBNAME"
 
 listVideos :: IO [Video]
 listVideos = do
