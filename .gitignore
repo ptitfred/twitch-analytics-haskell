@@ -2,3 +2,5 @@
 twitch-analytics-haskell.cabal
 *~
 *.sw*
+pg-env.sh
+prompt-pq.sh
