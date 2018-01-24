@@ -5,11 +5,11 @@ module Database where
 import           Data.Text                          (Text)
 import           Database.PostgreSQL.Simple         (ConnectInfo (..),
                                                      Connection, close, connect,
-                                                     execute, query_)
+                                                     execute, query_, defaultConnectInfo)
 import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 import           Database.PostgreSQL.Simple.ToField (ToField (..), toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow (..))
-import           System.Environment                 (getEnv)
+import           System.Environment                 (lookupEnv)
 
 type URL = String
 
@@ -39,11 +39,14 @@ getConnection = connect =<< getConnectInfo
 
 getConnectInfo :: IO ConnectInfo
 getConnectInfo =
-  ConnectInfo <$> getEnv "PG_HOST"
-              <*> (read <$> getEnv "PG_PORT")
-              <*> getEnv "PG_USER"
-              <*> getEnv "PG_PASS"
-              <*> getEnv "PG_DBNAME"
+  ConnectInfo <$> lookupEnvOrDefault connectHost "PG_HOST"
+              <*> (read <$> lookupEnvOrDefault (show . connectPort) "PG_PORT")
+              <*> lookupEnvOrDefault connectUser "PG_USER"
+              <*> lookupEnvOrDefault connectPassword "PG_PASS"
+              <*> lookupEnvOrDefault connectDatabase "PG_DBNAME"
+  where
+    lookupEnvOrDefault defaultAccessor env =
+      maybe (defaultAccessor defaultConnectInfo) id <$> lookupEnv env
 
 listVideos :: IO [Video]
 listVideos = do
