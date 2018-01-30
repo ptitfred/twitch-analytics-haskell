@@ -8,18 +8,16 @@ module Database
   , newPool
   ) where
 
+import           Database.Connection
+
 import           Control.Exception.Base             (catch)
-import           Data.Pool                          (Pool, createPool,
-                                                     withResource)
+import           Data.Pool                          (Pool, withResource)
 import           Data.Text                          (Text)
-import           Database.PostgreSQL.Simple         (ConnectInfo (..),
-                                                     Connection, ResultError,
-                                                     SqlError, close, connect,
-                                                     execute, query_)
+import           Database.PostgreSQL.Simple         (Connection, ResultError,
+                                                     SqlError, execute, query_)
 import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 import           Database.PostgreSQL.Simple.ToField (ToField (..), toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow (..))
-import           System.Environment                 (getEnv)
 
 type URL = String
 
@@ -63,16 +61,3 @@ listVideosUnsafe pool = withResource pool selectVideos
     selectVideos connection = query_ connection selectQuery
     selectQuery = "SELECT url, title, description FROM videos"
 
-newPool :: IO (Pool Connection)
-newPool = createPool getConnection close 1 0.5 2
-
-getConnection :: IO Connection
-getConnection = connect =<< getConnectInfo
-
-getConnectInfo :: IO ConnectInfo
-getConnectInfo =
-  ConnectInfo <$> getEnv "PG_HOST"
-              <*> (read <$> getEnv "PG_PORT")
-              <*> getEnv "PG_USER"
-              <*> getEnv "PG_PASS"
-              <*> getEnv "PG_DBNAME"
