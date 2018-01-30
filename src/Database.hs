@@ -5,6 +5,12 @@ module Database
   , URL
   , insertVideo
   , listVideos
+
+  , Tag(..)
+  , insertTagsForVideo
+  , listTags
+  , listTagsForVideos
+
   , newPool
   ) where
 
@@ -14,7 +20,8 @@ import           Control.Exception.Base             (catch)
 import           Data.Pool                          (Pool, withResource)
 import           Data.Text                          (Text)
 import           Database.PostgreSQL.Simple         (Connection, ResultError,
-                                                     SqlError, execute, query_)
+                                                     SqlError, execute,
+                                                     executeMany, query_)
 import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 import           Database.PostgreSQL.Simple.ToField (ToField (..), toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow (..))
@@ -61,3 +68,27 @@ listVideosUnsafe pool = withResource pool selectVideos
     selectVideos connection = query_ connection selectQuery
     selectQuery = "SELECT url, title, description FROM videos"
 
+newtype Tag = Tag { getTag :: Text } deriving Show
+
+insertTagsForVideo :: Pool Connection -> Video -> [Tag] -> IO Bool
+insertTagsForVideo pool video tags = insertTagsForVideoUnsafe pool video tags `catch` handleError
+  where
+    handleError :: SqlError -> IO Bool
+    handleError _ = pure False
+
+insertTagsForVideoUnsafe :: Pool Connection -> Video -> [Tag] -> IO Bool
+insertTagsForVideoUnsafe pool video tags = isSuccess <$> withResource pool insert
+  where
+    isSuccess rows = toInteger rows == toInteger (length tags)
+    insert connection = executeMany connection query parameters
+    parameters :: [(Text, URL)]
+    parameters = map mkParameter tags
+    mkParameter :: Tag -> (Text, URL)
+    mkParameter tag = (getTag tag, url video)
+    query = "INSERT INTO tags ( tag, video_url ) VALUES (?, ?)"
+
+listTags :: Pool Connection -> IO [Tag]
+listTags = undefined
+
+listTagsForVideos :: Pool Connection -> Video -> IO [Tag]
+listTagsForVideos = undefined
