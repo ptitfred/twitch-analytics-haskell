@@ -2,11 +2,14 @@
 
 module Database where
 
-import           Data.Text                  (Text)
-import           Database.PostgreSQL.Simple (ConnectInfo (..), Connection,
-                                             close, connect, execute, query_)
-
-import           System.Environment         (getEnv)
+import           Data.Text                          (Text)
+import           Database.PostgreSQL.Simple         (ConnectInfo (..),
+                                                     Connection, close, connect,
+                                                     execute, query_)
+import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
+import           Database.PostgreSQL.Simple.ToField (ToField (..), toField)
+import           Database.PostgreSQL.Simple.ToRow   (ToRow (..))
+import           System.Environment                 (getEnv)
 
 type URL = String
 
@@ -16,14 +19,19 @@ data Video =
         , description :: Text
         } deriving Show
 
+instance ToRow Video where
+  toRow (Video u t d) = [toField u, toField t,  toField d]
+
+instance FromRow Video where
+  fromRow = Video <$> field <*> field <*> field
+
 insertVideo :: Video -> IO Bool
 insertVideo video = do
   connection <- getConnection
-  affectedRows <- execute connection query tuple
+  affectedRows <- execute connection query video
   close connection
   pure (affectedRows == 1)
    where
-    tuple = (url video, title video, description video)
     query = "INSERT INTO videos ( url, title, description ) VALUES (?, ?, ?)"
 
 getConnection :: IO Connection
@@ -42,10 +50,6 @@ listVideos = do
   connection <- getConnection
   records <- query_ connection selectQuery
   close connection
-  pure $ toVideos records
+  pure records
   where
     selectQuery = "SELECT url, title, description FROM videos"
-    toVideo :: (URL, Text, Text) -> Video
-    toVideo (url', title', description') = Video url' title' description'
-    toVideos :: [(URL, Text, Text)] -> [Video]
-    toVideos records = map toVideo records
