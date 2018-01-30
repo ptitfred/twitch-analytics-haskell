@@ -3,3 +3,5 @@ CREATE TABLE videos (
   title       TEXT,
   description TEXT
 );
+
+ALTER TABLE videos ADD CONSTRAINT url_unique_key UNIQUE (url);
