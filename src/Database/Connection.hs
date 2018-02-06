@@ -8,7 +8,11 @@ import           Database.PostgreSQL.Simple         (ConnectInfo (..),
 import           System.Environment                 (getEnv)
 
 newPool :: IO (Pool Connection)
-newPool = createPool getConnection close 1 0.5 2
+newPool = createPool getConnection close subPools timeout maxConnections
+  where
+    subPools = 1
+    timeout = 30
+    maxConnections = 5
 
 getConnection :: IO Connection
 getConnection = connect =<< getConnectInfo
