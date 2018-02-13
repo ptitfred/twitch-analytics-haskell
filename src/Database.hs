@@ -20,8 +20,8 @@ import           Control.Exception.Base             (catch)
 import           Data.Pool                          (Pool, withResource)
 import           Data.Text                          (Text)
 import           Database.PostgreSQL.Simple         (Connection, ResultError,
-                                                     SqlError, execute,
-                                                     executeMany, query_)
+                                                     SqlError, Only(..), execute,
+                                                     executeMany, query, query_)
 import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 import           Database.PostgreSQL.Simple.ToField (ToField (..), toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow (..))
@@ -50,17 +50,11 @@ insertVideoUnsafe :: Pool Connection -> Video -> IO Bool
 insertVideoUnsafe pool video = isSuccess <$> withResource pool insert
   where
     isSuccess rows = rows == 1
-    insert connection = execute connection query video
-    query = "INSERT INTO videos ( url, title, description ) VALUES (?, ?, ?)"
+    insert connection = execute connection insertQuery video
+    insertQuery = "INSERT INTO videos ( url, title, description ) VALUES (?, ?, ?)"
 
 listVideos :: Pool Connection -> IO [Video]
-listVideos pool = listVideosUnsafe pool `catch` handleSqlError `catch` handleResultError
-  where
-    handleSqlError :: SqlError -> IO [Video]
-    handleSqlError _ = handleError
-    handleResultError :: ResultError -> IO [Video]
-    handleResultError _ = handleError
-    handleError = pure []
+listVideos = catchSelectError . listVideosUnsafe
 
 listVideosUnsafe :: Pool Connection -> IO [Video]
 listVideosUnsafe pool = withResource pool selectVideos
@@ -69,6 +63,9 @@ listVideosUnsafe pool = withResource pool selectVideos
     selectQuery = "SELECT url, title, description FROM videos"
 
 newtype Tag = Tag { getTag :: Text } deriving Show
+
+instance FromRow Tag where
+  fromRow = Tag <$> field
 
 insertTagsForVideo :: Pool Connection -> Video -> [Tag] -> IO Bool
 insertTagsForVideo pool video tags = insertTagsForVideoUnsafe pool video tags `catch` handleError
@@ -80,15 +77,36 @@ insertTagsForVideoUnsafe :: Pool Connection -> Video -> [Tag] -> IO Bool
 insertTagsForVideoUnsafe pool video tags = isSuccess <$> withResource pool insert
   where
     isSuccess rows = toInteger rows == toInteger (length tags)
-    insert connection = executeMany connection query parameters
+    insert connection = executeMany connection insertQuery parameters
     parameters :: [(Text, URL)]
     parameters = map mkParameter tags
     mkParameter :: Tag -> (Text, URL)
     mkParameter tag = (getTag tag, url video)
-    query = "INSERT INTO tags ( tag, video_url ) VALUES (?, ?)"
+    insertQuery = "INSERT INTO tags ( tag, video_url ) VALUES (?, ?)"
 
 listTags :: Pool Connection -> IO [Tag]
-listTags = undefined
+listTags = catchSelectError . listTagsUnsafe
+
+listTagsUnsafe :: Pool Connection -> IO [Tag]
+listTagsUnsafe pool = withResource pool selectTags
+  where
+    selectTags connection = query_ connection selectQuery
+    selectQuery = "SELECT DISTINCT tag FROM tags"
 
 listTagsForVideos :: Pool Connection -> Video -> IO [Tag]
-listTagsForVideos = undefined
+listTagsForVideos pool video = catchSelectError (listTagsForVideosUnsafe pool video)
+
+listTagsForVideosUnsafe :: Pool Connection -> Video -> IO [Tag]
+listTagsForVideosUnsafe pool video = withResource pool selectTags
+  where
+    selectTags connection = query connection selectQuery (Only (url video))
+    selectQuery = "SELECT DISTINCT tag FROM tags WHERE video_url = ?"
+
+catchSelectError :: IO [a] -> IO [a]
+catchSelectError f = f `catch` handleSqlError `catch` handleResultError
+
+handleSqlError :: SqlError -> IO [a]
+handleSqlError _ = pure []
+
+handleResultError :: ResultError -> IO [a]
+handleResultError _ = pure []
