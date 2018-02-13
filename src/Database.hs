@@ -11,6 +11,9 @@ module Database
   , listTags
   , listTagsForVideos
 
+  , TaggedVideo
+  , listTaggedVideos
+
   , newPool
   , Pool
   , Connection
@@ -29,6 +32,8 @@ import           Database.PostgreSQL.Simple.ToField (ToField (..), toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow (..))
 
 type URL = String
+
+type TaggedVideo = (Video, [Tag])
 
 data Video =
   Video { url         :: URL
@@ -103,6 +108,14 @@ listTagsForVideosUnsafe pool video = withResource pool selectTags
   where
     selectTags connection = query connection selectQuery (Only (url video))
     selectQuery = "SELECT DISTINCT tag FROM tags WHERE video_url = ?"
+
+listTaggedVideos :: Pool Connection -> IO [TaggedVideo]
+listTaggedVideos pool = listVideos pool >>= mapM (fetchTaggedVideo pool)
+
+fetchTaggedVideo :: Pool Connection -> Video -> IO TaggedVideo
+fetchTaggedVideo pool v = do
+  tags <- listTagsForVideos pool v
+  pure (v, tags)
 
 catchSelectError :: IO [a] -> IO [a]
 catchSelectError f = f `catch` handleSqlError `catch` handleResultError

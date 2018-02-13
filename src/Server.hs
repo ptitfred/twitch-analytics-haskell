@@ -6,7 +6,8 @@ module Server
   ( application
   ) where
 
-import           Database               (Connection, Pool, Video, listVideos)
+import           Database               (Connection, Pool, TaggedVideo,
+                                         listTaggedVideos)
 import           Templating             (page)
 
 import           Control.Monad.IO.Class (liftIO)
@@ -16,7 +17,7 @@ import           Servant.HTML.Blaze
 import           Servant.Server
 import           Text.Blaze             (ToMarkup (..))
 
-newtype Index = Index [Video]
+newtype Index = Index [TaggedVideo]
 
 instance ToMarkup Index where
   toMarkup (Index videos) = page videos
@@ -28,7 +29,7 @@ server :: Pool Connection -> Server API
 server pool = serveIndex pool :<|> serveIndex pool
 
 serveIndex :: Pool Connection -> Handler Index
-serveIndex pool = Index <$> liftIO (listVideos pool)
+serveIndex pool = Index <$> liftIO (listTaggedVideos pool)
 
 api :: Proxy API
 api = Proxy
