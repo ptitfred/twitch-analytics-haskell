@@ -12,6 +12,8 @@ module Database
   , listTagsForVideos
 
   , newPool
+  , Pool
+  , Connection
   ) where
 
 import           Database.Connection
