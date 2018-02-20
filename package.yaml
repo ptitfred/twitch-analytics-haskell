@@ -16,12 +16,15 @@ dependencies:
 - base >= 4.7 && < 5
 - aeson
 - blaze-html
+- blaze-markup
 - http-client
 - http-client-tls
 - postgresql-simple
 - resource-pool
 - servant
+- servant-blaze
 - servant-client
+- servant-server
 - text
 
 library:
@@ -30,6 +33,7 @@ library:
     - Database
     - TwitchAPI
     - TwitchParser
+    - Server
   ghc-options:
     - -Wall
     - -Werror
@@ -46,6 +50,20 @@ executables:
     - -Werror
     dependencies:
     - twitch-analytics-haskell
+
+  twitch-analytics-service:
+    main:                Service.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    - -Werror
+    - -main-is Service
+    dependencies:
+    - twitch-analytics-haskell
+    - warp
 
 tests:
   twitch-analytics-haskell-test:
