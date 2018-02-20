@@ -5,19 +5,27 @@ module Templating
   , TaggedVideo
   ) where
 
-import           Database                    as D (Tag (..), TaggedVideo, Video (..))
+import           Database                    as D (Tag (..), TaggedVideo,
+                                                   Video (..))
 
-import           Data.List                   (intersperse)
-import           Data.Monoid                 ((<>))
+import           Data.String                 (fromString)
 import           Data.Text                   (Text)
+import           Data.Time.Calendar          (showGregorian)
 import           Text.Blaze.Html5            as H
 import           Text.Blaze.Html5.Attributes as HA
 
 page :: [TaggedVideo] -> Html
-page videos =
-  html $
+page videos = do
+  docType
+  html $ do
+    pageHeader
     body $
       listVideos videos
+
+pageHeader :: Html
+pageHeader = do
+  H.title "Livecoding Haskell pour débutant"
+  meta ! charset "UTF-8"
 
 listVideos :: [TaggedVideo] -> Html
 listVideos []     = p $ toHtml noVideos
@@ -28,24 +36,37 @@ noVideos = "No video found :-("
 
 listItem :: TaggedVideo -> Html
 listItem (v, tags) =
-  li $ do
-    H.span
+  li ! class_ "video" $ do
+    H.div
       ! class_ "title"
-      $ toHtml (D.title v)
+      $ linkToVideo v
+    videoDate v
+    videoDescription v
     listTags tags
+
+linkToVideo :: Video -> Html
+linkToVideo v =
+  a ! href   (fromString $ D.url   v)
+    $ toHtml (D.title v)
+
+videoDate :: Video -> Html
+videoDate v =
+  H.div ! class_ "date"
+        $ toHtml (showGregorian (D.streamDate v))
+
+videoDescription :: Video -> Html
+videoDescription v =
+  H.div ! class_ "description"
+        $ toHtml (D.description v)
 
 listTags :: [D.Tag] -> Html
 listTags []   = mempty
-listTags tags = " - " <> mconcat (displayTags tags)
+listTags tags =
+  H.div ! class_ "tags"
+        $ mconcat (displayTags tags)
 
 displayTags :: [D.Tag] -> [Html]
-displayTags tags = intercalateSeparator (fmap displayTag tags)
-
-intercalateSeparator :: [Html] -> [Html]
-intercalateSeparator = intersperse tagSeparator
-
-tagSeparator :: Html
-tagSeparator = ", "
+displayTags tags = fmap displayTag tags
 
 displayTag :: D.Tag -> Html
 displayTag tag = do
