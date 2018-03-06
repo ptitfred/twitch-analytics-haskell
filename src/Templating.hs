@@ -5,14 +5,17 @@ module Templating
   , TaggedVideo
   ) where
 
-import           Database                    as D (Tag (..), TaggedVideo,
-                                                   Video (..))
+import           Database                             as D (Tag (..),
+                                                            TaggedVideo,
+                                                            Video (..))
 
-import           Data.String                 (fromString)
-import           Data.Text                   (Text)
-import           Data.Time.Calendar          (showGregorian)
-import           Text.Blaze.Html5            as H
-import           Text.Blaze.Html5.Attributes as HA
+import           Data.Monoid                          ((<>))
+import           Data.String                          (fromString)
+import           Data.Text                            (Text)
+import           Data.Time.Calendar                   (showGregorian)
+import           Text.Blaze.Html4.FrameSet.Attributes as H4A (frameborder)
+import           Text.Blaze.Html5                     as H
+import           Text.Blaze.Html5.Attributes          as HA
 
 page :: [TaggedVideo] -> Html
 page videos = do
@@ -40,9 +43,22 @@ listItem (v, tags) =
     H.div
       ! class_ "title"
       $ linkToVideo v
+    embedVideo (youtubeId v)
     videoDate v
     videoDescription v
     listTags tags
+
+embedVideo :: String -> Html
+embedVideo youtubeVideoId =
+  H.iframe ! HA.id "player"
+           ! HA.type_ "text/html"
+           ! HA.width "320"
+           ! HA.height "180"
+           ! HA.src embedUrl
+           ! H4A.frameborder "0"
+           $ mempty
+  where
+    embedUrl = "http://www.youtube.com/embed/" <> fromString youtubeVideoId <> "?enablejsapi=1"
 
 linkToVideo :: Video -> Html
 linkToVideo v =
