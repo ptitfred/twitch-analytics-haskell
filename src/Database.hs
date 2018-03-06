@@ -24,9 +24,11 @@ import           Database.Connection
 import           Control.Exception.Base             (catch)
 import           Data.Pool                          (Pool, withResource)
 import           Data.Text                          (Text)
-import           Database.PostgreSQL.Simple         (Connection, ResultError,
-                                                     SqlError, Only(..), execute,
-                                                     executeMany, query, query_)
+import           Data.Time.Calendar                 (Day)
+import           Database.PostgreSQL.Simple         (Connection, Only (..),
+                                                     ResultError, SqlError,
+                                                     execute, executeMany,
+                                                     query, query_)
 import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 import           Database.PostgreSQL.Simple.ToField (ToField (..), toField)
 import           Database.PostgreSQL.Simple.ToRow   (ToRow (..))
@@ -39,13 +41,14 @@ data Video =
   Video { url         :: URL
         , title       :: Text
         , description :: Text
+        , streamDate  :: Day
         } deriving Show
 
 instance ToRow Video where
-  toRow (Video u t d) = [toField u, toField t,  toField d]
+  toRow (Video u t d sd) = [toField u, toField t, toField d, toField sd]
 
 instance FromRow Video where
-  fromRow = Video <$> field <*> field <*> field
+  fromRow = Video <$> field <*> field <*> field <*> field
 
 insertVideo :: Pool Connection -> Video -> IO Bool
 insertVideo pool video = insertVideoUnsafe pool video `catch` handleError
@@ -58,7 +61,7 @@ insertVideoUnsafe pool video = isSuccess <$> withResource pool insert
   where
     isSuccess rows = rows == 1
     insert connection = execute connection insertQuery video
-    insertQuery = "INSERT INTO videos ( url, title, description ) VALUES (?, ?, ?)"
+    insertQuery = "INSERT INTO videos ( url, title, description, stream_date ) VALUES (?, ?, ?, ?)"
 
 listVideos :: Pool Connection -> IO [Video]
 listVideos = catchSelectError . listVideosUnsafe
@@ -67,7 +70,7 @@ listVideosUnsafe :: Pool Connection -> IO [Video]
 listVideosUnsafe pool = withResource pool selectVideos
   where
     selectVideos connection = query_ connection selectQuery
-    selectQuery = "SELECT url, title, description FROM videos"
+    selectQuery = "SELECT url, title, description, stream_date FROM videos"
 
 newtype Tag = Tag { getTag :: Text } deriving Show
 

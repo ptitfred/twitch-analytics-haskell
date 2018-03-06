@@ -26,6 +26,7 @@ dependencies:
 - servant-client
 - servant-server
 - text
+- time
 
 library:
   source-dirs: src
