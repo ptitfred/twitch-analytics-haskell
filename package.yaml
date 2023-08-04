@@ -66,6 +66,19 @@ executables:
     - twitch-analytics-haskell
     - warp
 
+  twitch-analytics-loader:
+    main:                Loader.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    - -Werror
+    - -main-is Loader
+    dependencies:
+    - twitch-analytics-haskell
+
 tests:
   twitch-analytics-haskell-test:
     main:                Spec.hs
